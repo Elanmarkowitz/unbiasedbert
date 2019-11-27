@@ -1,0 +1,4 @@
+.vscode
+__pycache__*
+augmentation_data*
+ontonotes-release-4.0*
