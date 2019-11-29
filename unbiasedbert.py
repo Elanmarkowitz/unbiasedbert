@@ -107,17 +107,22 @@ class UnBiasedBert(nn.Module):
                                           original_label_sequence,
                                           swapped_label_sequence)
             use_swapped = bias > 0
+            use_swapped = use_swapped.unsqueeze(-1)
+            seq = torch.where(use_swapped, swapped_label_sequence, original_label_sequence)
+            span1 = torch.where(use_swapped, swap_span1, orig_span1)
+            span2 = torch.where(use_swapped, swap_span2, orig_span2)
         elif use_orig_or_swap_only == 'orig':
             bias = None
             use_swapped = torch.zeros(original_label_sequence.size(0), 1).bool()
+            seq = original_label_sequence
+            span1 = orig_span1
+            span2 = orig_span2
         elif use_orig_or_swap_only == 'swap':
             bias = None 
             use_swapped = torch.ones(original_label_sequence.size(0), 1).bool()
-        
-        use_swapped = use_swapped.unsqueeze(-1)
-        seq = torch.where(use_swapped, swapped_label_sequence, original_label_sequence)
-        span1 = torch.where(use_swapped, swap_span1, orig_span1)
-        span2 = torch.where(use_swapped, swap_span2, orig_span2)
+            seq = swapped_label_sequence
+            span1 = swap_span1
+            span2 = swap_span2
 
         with torch.no_grad():
             hidden_states = self.bert_lm.bert(seq)[0]
@@ -148,3 +153,4 @@ def test_model(model, tokenizer):
     with torch.no_grad():
         last_hidden_states = model(input_ids)[0]
     return input_ids, last_hidden_states
+
