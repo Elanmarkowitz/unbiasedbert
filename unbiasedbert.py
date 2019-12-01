@@ -21,7 +21,7 @@ class SpanPairClassifier(nn.Module):
             nn.ReLU(True),
             nn.Linear(64, 16),
             nn.ReLU(True),
-            nn.Linear(16, 2)
+            nn.Linear(16, 1)
         )
 
 
@@ -76,14 +76,15 @@ class UnBiasedBert(nn.Module):
         swapped_score = self.sentence_score(swapped_output, swapped_label_sequence)
         return orig_score - swapped_score
 
-    def forward(self, original_probe_sequence, 
-                swapped_probe_sequence, 
-                original_label_sequence, 
-                swapped_label_sequence,
+    def forward(self, 
                 orig_span1,
                 orig_span2,
+                original_probe_sequence, 
+                original_label_sequence, 
                 swap_span1,
                 swap_span2,
+                swapped_probe_sequence,
+                swapped_label_sequence,
                 use_orig_or_swap_only=None):
         """
         original_probe_sequence: tokenized sequences of original sentence, with masking of swap words
@@ -143,10 +144,13 @@ class UnBiasedBert(nn.Module):
                                         s2_start, s2_end, s2_len, s2_start_state, s2_end_state)
         return out, bias
 
-def load_base():
+def load_tokenizer():
     tokenizer = BertTokenizer.from_pretrained(PRETRAINED_WEIGHTS_SHORTCUT)
-    model = BertTokenizer.from_pretrained(PRETRAINED_WEIGHTS_SHORTCUT)
-    return model, tokenizer
+    return tokenizer
+
+def load_model():
+    model = UnBiasedBert()
+    return model
 
 def test_model(model, tokenizer):
     input_ids = torch.tensor([tokenizer.encode("Here is some text to encode", add_special_tokens=True)])  # Add special tokens takes care of adding [CLS], [SEP], <s>... tokens in the right way for each model.

@@ -18,23 +18,27 @@ def sentence_parts_to_masked_sequence(tokenizer, sentence_parts, mask_indicators
     sentence_parts: list of strings that make up the sentence
     mask_indicators: list of bools indicating whether masking should be used for that part
     """
+    CLS = tokenizer.encode(SpecialChars.CLS)[0]
+    SEP = tokenizer.encode(SpecialChars.SEP)[0]
     mask_token = tokenizer.encode(SpecialChars.MASK)
     tokenized_parts = [tokenizer.encode(part) for part in sentence_parts]
-    masked_sequence = []
-    unmasked_sequence = []
+    masked_sequence = [CLS]
+    unmasked_sequence = [CLS]
     for part, mask_flag in zip(tokenized_parts, mask_indicators):
         masked_sequence += mask_token * len(part) if mask_flag else part
-        unmasked_sequence += part 
+        unmasked_sequence += part
+    masked_sequence += [SEP] 
+    unmasked_sequence += [SEP] 
     return masked_sequence, unmasked_sequence
 
-def get_tokenized_versions(tokenizer, sentence):
+def get_tokenized_versions(tokenizer, sentence, gender_swap_format=True):
     sentence_parts = []
     swapped_sentence_parts = []
     mask_indicators = []
     prev_part_type = "none"
     for word_conll in sentence:
         word = conll.word(word_conll)
-        alt_word = conll.alt_word(word_conll)
+        alt_word = conll.alt_word(word_conll) if gender_swap_format else '-'
         if alt_word != '-':
             cur_part_type = "swap"
         else:
@@ -45,16 +49,18 @@ def get_tokenized_versions(tokenizer, sentence):
             swapped_sentence_parts.append(alt_word if cur_part_type == "swap" else word)
             mask_indicators.append(True if cur_part_type == "swap" else False)
         else: 
-            sentence_parts[-1] += word 
-            swapped_sentence_parts += alt_word if cur_part_type == "swap" else word
+            sentence_parts[-1] += ' ' + word 
+            swapped_sentence_parts[-1] += ' ' + (alt_word if cur_part_type == "swap" else word)
     
     orig_masked_sequence, orig_label_sequence = sentence_parts_to_masked_sequence(tokenizer, sentence_parts, mask_indicators)
     swap_masked_sequence, swap_label_sequence = sentence_parts_to_masked_sequence(tokenizer, swapped_sentence_parts, mask_indicators)
     return orig_masked_sequence, orig_label_sequence, swap_masked_sequence, swap_label_sequence
 
-def get_sentence_spans(tokenizer, sentence):
-    tokenized_sentence = []
-    swap_tokenized_sentence = []
+def get_sentence_spans(tokenizer, sentence, gender_swap_format=True):
+    CLS = tokenizer.encode(SpecialChars.CLS)
+    SEP = tokenizer.encode(SpecialChars.SEP)
+    tokenized_sentence = CLS
+    swap_tokenized_sentence = CLS
     orig_corefs = defaultdict(lambda: ([],[],[]))
     swap_corefs = defaultdict(lambda: ([],[],[]))
     order = 0
@@ -64,7 +70,7 @@ def get_sentence_spans(tokenizer, sentence):
             startindex = len(tokenized_sentence)
             startswapindex = len(swap_tokenized_sentence)
             tokenized_sentence += tokenizer.encode(conll.word(word_conll))
-            alt_word = conll.word(word_conll) if conll.alt_word(word_conll) == '-' else conll.alt_word(word_conll)
+            alt_word = conll.word(word_conll) if not gender_swap_format or conll.alt_word(word_conll) == '-' else conll.alt_word(word_conll)
             swap_tokenized_sentence += tokenizer.encode(alt_word)
             endswapindex = len(swap_tokenized_sentence)
             endindex = len(tokenized_sentence)
@@ -83,8 +89,8 @@ def get_sentence_spans(tokenizer, sentence):
                 orig_corefs[single][1].append(endindex)
                 swap_corefs[single][0].append(startswapindex)
                 swap_corefs[single][1].append(endswapindex)
-                orig_corefs[start][2].append(order)
-                swap_corefs[start][2].append(order)
+                orig_corefs[single][2].append(order)
+                swap_corefs[single][2].append(order)
                 order += 1
     orig_coref_list = []
     swap_coref_list = []

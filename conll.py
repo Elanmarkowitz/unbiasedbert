@@ -16,7 +16,7 @@ def word_id(conll):
     return int(conll[0])
 
 def word(conll):
-    return conll[1].lower()
+    return conll[4]
 
 def lemma_word(conll):
     return conll[2].lower()
@@ -39,10 +39,10 @@ def write_arc_label(conll, label):
     return conll 
 
 def alt_word(conll):
-    return conll[9]
+    return conll[5]
 
 def coref(conll):
-    return conll[12]
+    return conll[-1]
 
 def get_spans(conll):
     if coref(conll) == '-':
@@ -60,7 +60,31 @@ def get_spans(conll):
             ends.append(int(span[:-1]))
     return starts, ends, singles
 
+def read_augmented_data(filename):
+    with open(filename, "r", encoding='utf-8') as f:
+        data = f.read()
+    documents = data.split('#end document')
+    documents[0] = documents[0][1:]  # skip column header line
+    documents = [d.splitlines()[1:] for d in documents]
+    out_docs = []
+    for doc in documents:
+        sentences = []
+        sentence = []
+        for line in doc:
+            line_data = line.split()
+            if len(line_data) <= 2:
+                if sentence:
+                    sentences.append(sentence)
+                sentence = []
+            else:
+                sentence.append(line_data) 
+        if sentence:
+            sentences.append(sentence)
+        out_docs.append(sentences)
+    return out_docs[:-1]
+
 def read_data(filename):
+    DELIMITER = '\t'
     with open(filename, "r", encoding='utf-8') as f:
         data = f.read()
     documents = data.split('#end document')
@@ -75,7 +99,7 @@ def read_data(filename):
                     sentences.append(sentence)
                 sentence = []
             else:
-                sentence.append(line.split("\t")) 
+                sentence.append(line.split(DELIMITER)) 
         if sentence:
             sentences.append(sentence)
         out_docs.append(sentences)
