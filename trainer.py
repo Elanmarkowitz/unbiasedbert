@@ -14,7 +14,7 @@ def cuda(tensor):
 class Trainer:
     def __init__(self, model):
         self.model = model 
-        self.optim = optim.Adam(self.model.parameters())
+        self.optim = optim.Adam(self.model.span_pair_classifier.parameters())
     
     def train(self, train_dataloader, val_dataloader, debias_method='active', epochs=1, checkpoint_dir=None):
         self.model.zero_grad()
@@ -68,10 +68,10 @@ class Trainer:
                 total_predicted = 0
 
                 for batch in val_dataloader:
-                    model_input = batch[:-1]
+                    model_input = [cuda(t) for t in batch[:-1]]
                     if model_input[2].size(1) > 510:  # skip if sentence too long
                         continue
-                    label = batch[-1]
+                    label = cuda(batch[-1])
                         
                     out, bias = self.model(*model_input, use_orig_or_swap_only=use_orig_or_swap_only)
 

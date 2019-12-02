@@ -70,11 +70,13 @@ class UnBiasedBert(nn.Module):
 
     def binary_bias_probe(self, original_sequence, swapped_sequence, orig_label_sequence, swapped_label_sequence):
         """ Returns tensor indicating presence of bias towards original """
-        seqs = torch.cat([original_sequence, swapped_sequence], dim=0)
-        output = self.bert_lm.forward(seqs)[0]
-        orig_output = output[:len(original_sequence)]
+        # seqs = torch.cat([original_sequence, swapped_sequence], dim=0)
+        # output = self.bert_lm.forward(seqs)[0]
+        # orig_output = output[:len(original_sequence)]
+        orig_output = self.bert_lm.forward(original_sequence)[0]
         orig_score = self.sentence_score(orig_output, orig_label_sequence)
-        swapped_output = output[len(original_sequence):]
+        #swapped_output = output[len(original_sequence):]
+        swapped_output = self.bert_lm.forward(swapped_sequence)[0]
         swapped_score = self.sentence_score(swapped_output, swapped_label_sequence)
         return orig_score - swapped_score
 

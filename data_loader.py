@@ -64,8 +64,8 @@ def my_collate(batch):
             coref_label
         ) 
 
-def get_data_loader(documentsfile):
+def get_data_loader(documentsfile, batch_size=10):
     dataset = DeBiasCorefDocumentDataset(documentsfile)
-    dataloader = DataLoader(dataset, batch_size=10, shuffle=True, collate_fn=my_collate)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=my_collate)
     return dataloader
 
