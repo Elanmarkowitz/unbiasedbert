@@ -17,7 +17,7 @@ class Trainer:
         self.optim = optim.Adam(self.model.parameters())
     
     def train(self, train_dataloader, val_dataloader, debias_method='active', epochs=1, checkpoint_dir=None):
-
+        self.model.zero_grad()
         if debias_method == 'active':
             use_orig_or_swap_only = None 
         elif debias_method == 'both':
@@ -45,12 +45,16 @@ class Trainer:
 
                 accuracy_loss = F.binary_cross_entropy_with_logits(out, label.unsqueeze(1).float())
                 loss = accuracy_loss 
-                cum_acc_loss += accuracy_loss.item()
+                cum_acc_loss += accuracy_loss.cpu().item()
                 bias_loss = None
                 if bias is not None:
                     bias_loss = bias.abs().mean()
                     loss += bias_loss
-                    cum_bias_loss += bias_loss.item()
+                    cum_bias_loss += bias_loss.cpu().item()
+
+                self.optim.zero_grad()
+                loss.backward()
+                self.optim.step()
 
                 if i % 1000 == 0:
                     pbar.write('accuracy_loss: {}, bias_loss: {}'.format(cum_acc_loss/1000, cum_bias_loss/1000 if bias is not None else 'NA'))
