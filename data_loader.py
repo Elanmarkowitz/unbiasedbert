@@ -46,14 +46,17 @@ class DeBiasCorefDocumentDataset(Dataset):
         ) 
 
 def my_collate(batch):
+    seqs = [b[2] for b in batch] + [b[3] for b in batch] + [b[6] for b in batch] + [b[7] for b in batch]
+    batch_size = len(batch)
+    seqs = torch.nn.utils.rnn.pad_sequence(seqs, batch_first=True)
     orig_span1 = torch.stack([b[0] for b in batch])
     orig_span2 = torch.stack([b[1] for b in batch])
-    orig_mask = torch.nn.utils.rnn.pad_sequence([b[2] for b in batch], batch_first=True) 
-    orig_label = torch.nn.utils.rnn.pad_sequence([b[3] for b in batch], batch_first=True) 
+    orig_mask = seqs[0:batch_size]
+    orig_label = seqs[batch_size:2*batch_size] 
     swap_span1 = torch.stack([b[4] for b in batch])
     swap_span2 = torch.stack([b[5] for b in batch])
-    swap_mask = torch.nn.utils.rnn.pad_sequence([b[6] for b in batch], batch_first=True) 
-    swap_label = torch.nn.utils.rnn.pad_sequence([b[7] for b in batch], batch_first=True) 
+    swap_mask = seqs[2*batch_size:3*batch_size]  
+    swap_label = seqs[3*batch_size:4*batch_size] 
     coref_label = torch.stack([b[8] for b in batch])
     return (
             orig_span1, orig_span2, orig_mask, orig_label,

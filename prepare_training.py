@@ -20,10 +20,12 @@ def main():
     data = conll.read_augmented_data(DATAFILE)
     documents_data = []
     for i, doc in enumerate(data):
+        print('\r{}/{}'.format(i+1,len(data)), end='')
         out_data = resolver.create_training_data(doc)
         documents_data.append(out_data)
-        torch.save(doc, os.path.join(OUTDIR, "{:04d}.pkl".format(i)))
+        torch.save(out_data, os.path.join(OUTDIR, "{:04d}.pkl".format(i)))
     torch.save(documents_data, OUTFILE)
+    print('\nDone.')
 
     
 

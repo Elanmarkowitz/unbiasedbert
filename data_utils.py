@@ -57,23 +57,23 @@ def get_tokenized_versions(tokenizer, sentence, gender_swap_format=True):
     return orig_masked_sequence, orig_label_sequence, swap_masked_sequence, swap_label_sequence
 
 def get_sentence_spans(tokenizer, sentence, gender_swap_format=True):
-    CLS = tokenizer.encode(SpecialChars.CLS)
-    SEP = tokenizer.encode(SpecialChars.SEP)
-    tokenized_sentence = CLS
-    swap_tokenized_sentence = CLS
+    CLS = tokenizer.encode(SpecialChars.CLS)[0]
+    SEP = tokenizer.encode(SpecialChars.SEP)[0]
+    tokenized_sentence = [CLS]
+    swap_tokenized_sentence = [CLS]
     orig_corefs = defaultdict(lambda: ([],[],[]))
     swap_corefs = defaultdict(lambda: ([],[],[]))
     order = 0
     for word_conll in sentence:
         coref = conll.coref(word_conll)
+        startindex = len(tokenized_sentence)
+        startswapindex = len(swap_tokenized_sentence)
+        tokenized_sentence += tokenizer.encode(conll.word(word_conll))
+        alt_word = conll.word(word_conll) if not gender_swap_format or conll.alt_word(word_conll) == '-' else conll.alt_word(word_conll)
+        swap_tokenized_sentence += tokenizer.encode(alt_word)
+        endswapindex = len(swap_tokenized_sentence) - 1
+        endindex = len(tokenized_sentence) - 1
         if coref != '-':
-            startindex = len(tokenized_sentence)
-            startswapindex = len(swap_tokenized_sentence)
-            tokenized_sentence += tokenizer.encode(conll.word(word_conll))
-            alt_word = conll.word(word_conll) if not gender_swap_format or conll.alt_word(word_conll) == '-' else conll.alt_word(word_conll)
-            swap_tokenized_sentence += tokenizer.encode(alt_word)
-            endswapindex = len(swap_tokenized_sentence)
-            endindex = len(tokenized_sentence)
             starts, ends, singles = conll.get_spans(word_conll)
             for start in starts:
                 orig_corefs[start][0].append(startindex)

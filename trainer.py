@@ -39,6 +39,8 @@ class Trainer:
             for i, batch in enumerate(train_dataloader):
                 pbar.update(1)
                 model_input = [cuda(t) for t in batch[:-1]]
+                if model_input[2].size(1) > 510:  # skip if sentence too long
+                    continue
                 label = cuda(batch[-1])
                     
                 out, bias = self.model(*model_input, use_orig_or_swap_only=use_orig_or_swap_only)
@@ -49,7 +51,7 @@ class Trainer:
                 bias_loss = None
                 if bias is not None:
                     bias_loss = bias.abs().mean()
-                    loss += bias_loss
+                    #loss += bias_loss
                     cum_bias_loss += bias_loss.cpu().item()
 
                 self.optim.zero_grad()
@@ -67,6 +69,8 @@ class Trainer:
 
                 for batch in val_dataloader:
                     model_input = batch[:-1]
+                    if model_input[2].size(1) > 510:  # skip if sentence too long
+                        continue
                     label = batch[-1]
                         
                     out, bias = self.model(*model_input, use_orig_or_swap_only=use_orig_or_swap_only)

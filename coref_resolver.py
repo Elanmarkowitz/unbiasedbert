@@ -65,12 +65,12 @@ class CorefResolver:
                         swap_span2_start = swap_span[1] + first_seq_length_swap
                         swap_span2_end = swap_span[2] + first_seq_length_swap
                     for span_idx in [orig_span1_end, orig_span1_start, orig_span2_end, orig_span2_start]:
-                        if span_idx < 0 or span_idx > len(combined_orig_label_seq):
+                        if span_idx < 0 or span_idx >= len(combined_orig_label_seq):
                             import pdb; pdb.set_trace()
                             s = data_utils.get_tokenized_versions(self.tokenizer, sentence)
                             data_utils.get_sentence_spans(self.tokenizer, sentence)
                     for span_idx in [swap_span1_end, swap_span1_start, swap_span2_end, swap_span2_start]:
-                        if span_idx < 0 or span_idx > len(combined_swap_label_seq):
+                        if span_idx < 0 or span_idx >= len(combined_swap_label_seq):
                             import pdb; pdb.set_trace()
                     data = [
                         orig_span1_start, 
