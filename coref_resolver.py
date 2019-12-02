@@ -58,11 +58,18 @@ class CorefResolver:
                         combined_orig_label_seq = self.sentences[comp_sentence_idx][1] + self.sentences[cur_sentence_idx][1]
                         combined_swap_masked_seq = self.sentences[comp_sentence_idx][2] + self.sentences[cur_sentence_idx][2]
                         combined_swap_label_seq = self.sentences[comp_sentence_idx][3] + self.sentences[cur_sentence_idx][3]
-                        first_seq_length = len(self.sentences[comp_sentence_idx][1])
-                        orig_span2_start = orig_span[1] + first_seq_length
-                        orig_span2_end = orig_span[2] + first_seq_length
-                        swap_span2_start = swap_span[1] + first_seq_length
-                        swap_span2_end = swap_span[2] + first_seq_length
+                        first_seq_length_orig = len(self.sentences[comp_sentence_idx][1])
+                        first_seq_length_swap = len(self.sentences[comp_sentence_idx][3])
+                        orig_span2_start = orig_span[1] + first_seq_length_orig
+                        orig_span2_end = orig_span[2] + first_seq_length_orig
+                        swap_span2_start = swap_span[1] + first_seq_length_swap
+                        swap_span2_end = swap_span[2] + first_seq_length_swap
+                    for span_idx in [orig_span1_end, orig_span1_start, orig_span2_end, orig_span2_start]:
+                        if span_idx < 0 or span_idx > len(combined_orig_label_seq):
+                            import pdb; pdb.set_trace()
+                    for span_idx in [swap_span1_end, swap_span1_start, swap_span2_end, swap_span2_start]:
+                        if span_idx < 0 or span_idx > len(combined_swap_label_seq):
+                            import pdb; pdb.set_trace()
                     data = [
                         orig_span1_start, 
                         orig_span1_end, 
